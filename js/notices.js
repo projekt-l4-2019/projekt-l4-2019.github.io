@@ -1,4 +1,4 @@
-const url = "https://rhubarb-cobbler-84890.herokuapp.com/noticeFulls";
+const url = "https://rhubarb-cobbler-84890.herokuapp.com/notices";
 
 //Get notices list from server
 const app = document.getElementById('notices');
