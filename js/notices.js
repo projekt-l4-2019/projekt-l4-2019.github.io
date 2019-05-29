@@ -64,19 +64,14 @@ request.onload = function () {
         html += '<li class="list-group-item">Miejsce spotkania: ' + notice.meeting_place + '</li>';
         html += '<li class="list-group-item">Cena za godzinę: ' + notice.price + ' zł </li>';
         html += '<li class="list-group-item">Godzina: ' + notice.time_from+ ' - ' + notice.time_to + '</li>';
+       
         date = new Date(notice.meeting_date);
+        year = date.getFullYear();
+        month = addZero(date.getMonth() + 1);
+        dt = addZero(date.getDate());
 
-                year = date.getFullYear();
-                month = date.getMonth() + 1;
-                dt = date.getDate();
-                if (dt < 10) {
-                    dt = '0' + dt;
-                }
-                if (month < 10) {
-                    month = '0' + month;
-                }
         html += '<li class="list-group-item">Termin spotkania: ' + dt + '.' + month + '.' + year +'</li>';
-        notice_extended.innerHTML = html;
+        if(html) notice_extended.innerHTML = html;
     }
 };
 request.send();
@@ -94,30 +89,39 @@ function addZero(int){
 }
 
 
-// Post a user
-function sendNotice() {
-    var data = {};
-    data.name = document.getElementById("inputName").value;
-    data.surname = document.getElementById("inputSurname").value;
-
-    if(data.name==='') alert("Nie podano wartosci!");
-    else {
-        let json = JSON.stringify(data);
-        console.log(data);
-        let xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
-        xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
-        xhr.onload = function () {
-            let users = JSON.parse(xhr.responseText);
-            if (xhr.readyState === 4 && xhr.status === 201) {
-                console.table(users);
-            } else {
-                console.error(users);
-            }
-        };
-        xhr.send(json);
-        //TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json). Trzeba skombinować jakieś obejście lepsze niż alert.
-        alert('Dodano pomyslnie!');
-        location.reload();
+// Post notice to server
+if (window.location.pathname.substr(-14) === 'noticeadd.html'){
+    function postNotice() {
+        var data = {};
+        data.look_or_offer = document.getElementById("lookOrOffer").tabIndex;
+        // data.subject = document.getElementById("selectSubject").value;
+        data.subject = "Geografia";
+        // data.level = document.getElementById("selectLevel").value; //TEMP DISABLE
+        data.meeting_place = document.getElementById("meetingPlace").value;
+        data.price = document.getElementById("price").value;
+        // data.time_from = document.getElementById("timeFrom").value;
+        // data.time_to = document.getElementById("timeTo").value;
+        data.note = document.getElementById("noticeDescription").value;
+        data.active = 1;
+        // if(data[7]==='') alert("Nie podano wartosci!");
+        // else {
+            let json = JSON.stringify(data);
+            console.log(json);
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+            xhr.onload = function () {
+                let users = JSON.parse(xhr.responseText);
+                if (xhr.readyState === 4 && xhr.status === 201) {
+                    console.table(users);
+                } else {
+                    console.error(users);
+                }
+            };
+            xhr.send(json);
+            //TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json). Trzeba skombinować jakieś obejście lepsze niż alert.
+            alert('Dodano pomyslnie!');
+            // location.reload();
+        // }
     }
 }
