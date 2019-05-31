@@ -64,18 +64,41 @@
             <img class="avatar" src="img/avatars/default.PNG" alt="Card image">
             <div class="card-body">
                 <h5 class="card-title">O mnie</h5>
-                <h6 class="card-subtitle mb-2 text-muted">Doświadczony korepetytor(jakaś ranga/ocena?)</h6>
-                <p class="card-text">Od 5 lat udzielam korepetycji z matematyki (opis własny użytkownika)</p>
+                <input type="text" class="form-control" placeholder="Napisz swój opis..." id="userAbout" />
                 <ul class="list-group list-group-flush" style="font-size: 20px;">
-                    <li class="list-group-item"><i class="material-icons">phone</i>+48 123732217</li>
-                    <li class="list-group-item"><i class="material-icons">email</i>roga@le.com</li>
-                    <li class="list-group-item"><i class="material-icons">location_city</i>Rzeszów</li>
-                    <li class="list-group-item"><i class="material-icons">account_box</i>21 Lat</li>
+                    <li class="list-group-item"><i class="material-icons">phone</i>Telefon</li>
+                    <input type="text" class="form-control" placeholder="Podaj numer telefonu..." id="userAbout" />
+                    <li class="list-group-item"><i class="material-icons">email</i>E-mail</li>
+                    <input type="text" class="form-control" placeholder="Podaj e-mail..." id="userAbout" />
+                    <li class="list-group-item"><i class="material-icons">location_city</i>Miasto:</li>
+                    <input type="text" class="form-control" placeholder="Podaj miasto..." id="userAbout" />
+                    <li class="list-group-item"><i class="material-icons">account_box</i>Wiek:</li>
+                    <select class="custom-select">
+                        <option selected="">Wybierz wiek...</option>
+                        <option value="1">15</option>
+                        <option value="2">16</option>
+                        <option value="3">17</option>
+                        <option value="4">18</option>
+                        <option value="5">19</option>
+                        <option value="6">20</option>
+                        <option value="7">21</option>
+                        <option value="8">22</option>
+                        <option value="9">23</option>
+                        <option value="10">24</option>
+                        <option value="11">25</option>
+                        <option value="12">26</option>
+                        <option value="13">27</option>
+                        <option value="14">28</option>
+                        <option value="15">29</option>
+                    </select>
                 </ul>
             </div>
-            <button type="button" class="btn btn-success show-ann">Zobacz ogłoszenia!</button>
-            <a href="noticeadd.html"><button class="circleButton" style="right: 6vw; top: 32vh;"><i
-                        class="material-icons">edit</i></button></a>
+            <button type="button" class="btn btn-success show-ann">Zatwierdź</button>
+            <div class="alert alert-dismissible alert-danger formError">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong>Coś poszło nie tak!</strong> <a href="#" class="alert-link">Wypełnij formularz poprawnie</a> i
+                spróbuj przesłać ponownie.
+            </div>
         </div>
     </div>
     </div>
