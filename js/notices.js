@@ -270,40 +270,43 @@ function timeToTimestamp(date, time) {
 
 function postNotice() {
     var data = {};
-    if (document.getElementById('offer').classList.contains('active')) {
-        data.lookOrOffer = 0;
-    } else {
-        data.lookOrOffer = 1;
-    }
-    data.subjectBySubjectIdSubject.idSubject[0] = getListIndex();
-    console.log(data);
-    data.level = document.getElementById("selectLevel").value;
-    data.meetingPlace = document.getElementById("selectCity").value;
-    data.price = document.getElementById("price").value;
-    data.date = document.getElementById("date").value;
-    data.timeFrom = timeToTimestamp(data.date, document.getElementById('timeFrom').value);
-    data.timeTo = timeToTimestamp(data.date, document.getElementById('timeTo').value);
-    data.note = document.getElementById("noticeDescription").value;
-    data.userByUserIdUser.idUser = 1;
-    // data.meetingByMeetingIdMeetin
-    // if(data[7]==='') alert("Nie podano wartosci!");
-    // else {
+
     let json = JSON.stringify(data);
     console.log(json);
+    // if (document.getElementById('offer').classList.contains('active')) {
+    //     data.lookOrOffer = 0;
+    // } else {
+    //     data.lookOrOffer = 1;
+    // }
+    // data.subjectBySubjectIdSubject.idSubject[0] = getListIndex();
+    // console.log(data);
+    // data.level = document.getElementById("selectLevel").value;
+    // data.meetingPlace = document.getElementById("selectCity").value;
+    // data.price = document.getElementById("price").value;
+    // data.date = document.getElementById("date").value;
+    // data.timeFrom = timeToTimestamp(data.date, document.getElementById('timeFrom').value);
+    // data.timeTo = timeToTimestamp(data.date, document.getElementById('timeTo').value);
+    // data.note = document.getElementById("noticeDescription").value;
+    // data.userByUserIdUser.idUser = 1;
+    // // data.meetingByMeetingIdMeetin
+    // // if(data[7]==='') alert("Nie podano wartosci!");
+    // // else {
+    // let json = JSON.stringify(data);
+    // console.log(json);
 
-    let xhr = new XMLHttpRequest();
-    xhr.open("POST", noticesUrl, true);
-    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-    xhr.onload = function () {
-        let users = JSON.parse(xhr.responseText);
-        if (xhr.readyState === 4 && xhr.status === 201) {
-            console.table(users);
-        } else {
-            console.error(users);
-        }
-    };
-    xhr.send(json);
-    alert('Dodano pomyslnie!');
+    // let xhr = new XMLHttpRequest();
+    // xhr.open("POST", noticesUrl, true);
+    // xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    // xhr.onload = function () {
+    //     let users = JSON.parse(xhr.responseText);
+    //     if (xhr.readyState === 4 && xhr.status === 201) {
+    //         console.table(users);
+    //     } else {
+    //         console.error(users);
+    //     }
+    // };
+    // xhr.send(json);
+    // alert('Dodano pomyslnie!');
     //TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json). Trzeba skombinować jakieś obejście lepsze niż alert.
 
     // location.reload();
