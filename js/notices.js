@@ -3,12 +3,24 @@ const citiesUrl = "https://rhubarb-cobbler-84890.herokuapp.com/cities";
 const voivodeshipsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/voivodeships";
 const subjectsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/subjects";
 
+if (window.location.pathname.substr(-10) === 'index.html') {
+    loadNotices();
+    loadVoivodeships();
+    loadSubjects();
+}
+if (window.location.pathname.substr(-14) === 'noticeadd.html') {
+    loadVoivodeships();
+    loadSubjects();
+}
+if (window.location.pathname.substr(-11) === 'notice.html') {
+    loadSelectedNotice();
+}
+
+
 class City {
-    constructor(idCity, cityName, idVoivodeship, nameVoivodeship) {
+    constructor(idCity, cityName) {
         this.idCity = idCity;
         this.cityName = cityName;
-        this.idVoivodeship = idVoivodeship;
-        this.nameVoivodeship = nameVoivodeship;
     }
 }
 
@@ -44,31 +56,36 @@ class Notice {
     }
 }
 
-function loadCities() {
+function loadCities(id) {
     let cityArray = new Array();
     let cityList;
     let request = new XMLHttpRequest();
-    request.open('GET', citiesUrl, true);
-    request.onload = function () {
-        // Begin accessing JSON data here
-        cityList = JSON.parse(this.response);
-        if (request.status >= 200 && request.status < 400) {
-            cityList.forEach(city => {
-                let newCity = new City(city.idCity, city.name, city.voivodeshipByVoivodeshipIdVoivodeship.idVoivodeship, city.voivodeshipByVoivodeshipIdVoivodeship.nameVoivodeship);
-                cityArray.push(newCity);
-            });
+    if (id != 0 && id != "undefined") {
+        request.open('GET', voivodeshipsUrl + '/' + id, true);
+        request.onload = function () {
+            // Begin accessing JSON data here
+            cityList = JSON.parse(this.response);
+            cityList = cityList.citiesByIdVoivodeship;
+            if (request.status >= 200 && request.status < 400) {
+                cityList.forEach(city => {
+                    let newCity = new City(city.idCity, city.name);
 
-        } else {
-            console.log('error');
-        }
-        const cityListHTML = document.getElementById('selectCity');
-        html = '<option>Wszystkie</option>';
-        for (let i = 0; i < cityArray.length; i++) {
-            html += '<option>' + cityArray[i].cityName + '</option>';
-        }
-        cityListHTML.innerHTML = html;
-    };
-    request.send();
+                    cityArray.push(newCity);
+                });
+            } else {
+                console.log('error');
+            }
+            const cityListHTML = document.getElementById('selectCity');
+            html = '';
+            if (window.location.pathname.substr(-10) === 'index.html') html = 'Wszystkie';
+            for (let i = 0; i < cityArray.length; i++) {
+                html += '<option>' + cityArray[i].cityName + '</option>';
+            }
+            cityListHTML.innerHTML = html;
+
+        };
+        request.send();
+    }
 }
 
 function loadVoivodeships() {
@@ -84,7 +101,6 @@ function loadVoivodeships() {
                 let newVoivodeship = new Voivodeship(voivodeship.idVoivodeship, voivodeship.nameVoivodeship);
                 voivodeshipArray.push(newVoivodeship);
             });
-
         } else {
             console.log('error');
         }
@@ -108,7 +124,7 @@ function loadSubjects() {
         subjectList = JSON.parse(this.response);
         if (request.status >= 200 && request.status < 400) {
             subjectList.forEach(subject => {
-                let newSubject = new Subject(subject.idSubject, subject.name, subject.subjectBySubjectIdSubjec);
+                let newSubject = new Subject(subject.idSubject, subject.name, subject.subjectBySubjectIdSubject);
                 subjectArray.push(newSubject);
             });
 
@@ -150,7 +166,7 @@ function loadNotices() {
             html += '<a href="notice.html" onclick="getNoticeId(' + notice.idNotice + ')" class="list-group-item list-group-item-action flex-column align-items-start">';
             html += '<div class="d-flex w-100 justify-content-between">';
             html += '<h5 class="mb-1">' + notice.subjectName + '</h5>';
-            html += '<small>dodano: ' + getDate(notice.timestamp) + '</small>';
+            html += '<small>dodano: ' + getDate(notice.addDate) + '</small>';
             html += '</div>';
 
             if (notice.note.length > 250) {
@@ -195,7 +211,6 @@ function loadSelectedNotice() {
             html += '<li class="list-group-item">Cena za godzinę: ' + notice.price + ' zł </li>';
             html += '<li class="list-group-item">Godzina: ' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</li>';
             html += '<li class="list-group-item">Termin spotkania: ' + getDate(notice.meetingDate) + '</li>';
-            notice_extended.innerHTML = html;
         }
         noticeListHTML.innerHTML = html;
     };
@@ -205,6 +220,24 @@ function loadSelectedNotice() {
 function getNoticeId(id_notice) {
     var noticeID = id_notice;
     localStorage.setItem('noticeID', noticeID);
+}
+
+function getViovideshipIndex() {
+    let ele = document.getElementById("selectVoivodeship");
+    for (var i = 0; i < ele.length; i++) {
+        if (ele[i].childNodes[0].nodeValue === ele.value) {
+            loadCities(i);
+        }
+    }
+}
+
+function getListIndex(){
+    let ele = document.getElementById("selectSubject");
+    for (var i = 0; i < ele.length; i++) {
+        if (ele[i].childNodes[0].nodeValue === ele.value) {
+            return i;
+        }
+    }
 }
 
 function addZero(int) {
@@ -229,54 +262,49 @@ function getDate(dateJSON) {
     return day + '.' + month + '.' + year;
 }
 
-if (window.location.pathname.substr(-10) === 'index.html') {
-    loadCities();
-    loadVoivodeships();
-    loadSubjects();
-    loadNotices();
-}
-if (window.location.pathname.substr(-14) === 'noticeadd.html') {
-    loadCities();
-    loadVoivodeships();
-    loadSubjects();
-}
-if (window.location.pathname.substr(-11) === 'notice.html') {
-    loadSelectedNotice();
+function timeToTimestamp(date, time) {
+    date = date.split(':');
+    let newTime = new Date(date[1] + '/' + date[2] + '/' + date[0] + ' ' + time);
+    return newTime;
 }
 
-// // Post notice to server
-// if (window.location.pathname.substr(-14) === 'noticeadd.html') {
-//     function postNotice() {
-//         var data = {};
-//         data.look_or_offer = document.getElementById("lookOrOffer").tabIndex;
-//         // data.subject = document.getElementById("selectSubject").value;
-//         data.subject = "Geografia";
-//         // data.level = document.getElementById("selectLevel").value; //TEMP DISABLE
-//         data.meeting_place = document.getElementById("meetingPlace").value;
-//         data.price = document.getElementById("price").value;
-//         // data.time_from = document.getElementById("timeFrom").value;
-//         // data.time_to = document.getElementById("timeTo").value;
-//         data.note = document.getElementById("noticeDescription").value;
-//         data.active = 1;
-//         // if(data[7]==='') alert("Nie podano wartosci!");
-//         // else {
-//         let json = JSON.stringify(data);
-//         console.log(json);
-//         let xhr = new XMLHttpRequest();
-//         xhr.open("POST", url, true);
-//         xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-//         xhr.onload = function () {
-//             let users = JSON.parse(xhr.responseText);
-//             if (xhr.readyState === 4 && xhr.status === 201) {
-//                 console.table(users);
-//             } else {
-//                 console.error(users);
-//             }
-//         };
-//         xhr.send(json);
-//         //TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json). Trzeba skombinować jakieś obejście lepsze niż alert.
-//         alert('Dodano pomyslnie!');
-//         // location.reload();
-//         // }
-//     }
-// }
+function postNotice() {
+    var data = {};
+    if (document.getElementById('offer').classList.contains('active')) {
+        data.lookOrOffer = 0;
+    } else {
+        data.lookOrOffer = 1;
+    }
+    data.subjectBySubjectIdSubject.idSubject[0] = getListIndex();
+    console.log(data);
+    data.level = document.getElementById("selectLevel").value;
+    data.meetingPlace = document.getElementById("selectCity").value;
+    data.price = document.getElementById("price").value;
+    data.date = document.getElementById("date").value;
+    data.timeFrom = timeToTimestamp(data.date, document.getElementById('timeFrom').value);
+    data.timeTo = timeToTimestamp(data.date, document.getElementById('timeTo').value);
+    data.note = document.getElementById("noticeDescription").value;
+    data.userByUserIdUser.idUser = 1;
+    // data.meetingByMeetingIdMeetin
+    // if(data[7]==='') alert("Nie podano wartosci!");
+    // else {
+    let json = JSON.stringify(data);
+    console.log(json);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", noticesUrl, true);
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    xhr.onload = function () {
+        let users = JSON.parse(xhr.responseText);
+        if (xhr.readyState === 4 && xhr.status === 201) {
+            console.table(users);
+        } else {
+            console.error(users);
+        }
+    };
+    xhr.send(json);
+    alert('Dodano pomyslnie!');
+    //TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json). Trzeba skombinować jakieś obejście lepsze niż alert.
+
+    // location.reload();
+}
