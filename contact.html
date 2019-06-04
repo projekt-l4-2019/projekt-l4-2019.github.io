@@ -46,7 +46,7 @@
                 <button type="button" id="sidebarCollapse" class="btn btn-success">
                     <i class="material-icons">menu</i>
                 </button>
-                <img src=img/banner.png id="banner" alt="TeachMe" width="120">
+                <a href="index.html"><img src=img/banner.png id="banner" alt="TeachMe" width="120"></a>
                 <button type="button" id="search" class="btn btn-success disabled">
                     <i class="material-icons">search</i>
                 </button>
@@ -62,15 +62,13 @@
             <div class="card-body" style="padding-top:0">
                 <ul class="list-group list-group-flush" style="font-size: 20px;">
                     <li class="list-group-item">Treść:</li>
-                    <textarea class="form-control" id="noticeDescription" rows="8"></textarea>
+                    <textarea class="form-control" id="noticeDescription" rows="8" required></textarea>
                 </ul>
             </div>
-            <button type="button" class="btn btn-success show-ann">Wyślij</button>
-            <div class="alert alert-dismissible alert-danger formError">
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                <strong>Coś poszło nie tak!</strong> <a href="#" class="alert-link">Wypełnij formularz poprawnie</a> i
-                spróbuj przesłać ponownie.
-            </div>
+            <a
+                onclick="window.location='mailto:pgp2019l4@gmail.com?subject=Wiadomość od użytkownika TeachMe&body='+document.getElementById('noticeDescription').value">
+                <button type="button" class="btn btn-success show-ann">Wyślij</button>
+            </a>
         </div>
 
         <script type="text/javascript" src="cordova.js"></script>

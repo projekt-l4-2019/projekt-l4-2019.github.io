@@ -2,8 +2,15 @@ const noticesUrl = "https://rhubarb-cobbler-84890.herokuapp.com/notices";
 const citiesUrl = "https://rhubarb-cobbler-84890.herokuapp.com/cities";
 const voivodeshipsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/voivodeships";
 const subjectsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/subjects";
+const apiUrl = 'https://rhubarb-cobbler-84890.herokuapp.com';
 const opinionsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/opinions";
 const usersUrl = "https://rhubarb-cobbler-84890.herokuapp.com/users";
+
+
+///TEMP SETTINGS:
+storeUserId(2);
+
+
 
 if (window.location.pathname.substr(-10) === 'index.html') {
     loadNotices();
@@ -15,6 +22,7 @@ if (window.location.pathname.substr(-10) === 'index.html') {
 } else if (window.location.pathname.substr(-11) === 'notice.html') {
     loadSelectedNotice();
     loadUserProfile();
+    loadUserOpinions();
 } else if (window.location.pathname.substr(-12) === 'profile.html') {
     loadUserProfile();
     loadUserOpinions();
@@ -83,39 +91,7 @@ class User {
     }
 }
 
-function loadCities(id) {
-    let cityArray = new Array();
-    let cityList;
-    let request = new XMLHttpRequest();
-    if (id != 0 && id != "undefined") {
-        request.open('GET', voivodeshipsUrl + '/' + id, true);
-        request.onload = function () {
-            // Begin accessing JSON data here
-            cityList = JSON.parse(this.response);
-            cityList = cityList.citiesByIdVoivodeship;
-            if (request.status >= 200 && request.status < 400) {
-                cityList.forEach(city => {
-                    let newCity = new City(city.idCity, city.name);
-                    cityArray.push(newCity);
-                });
-            } else {
-                console.log('error');
-            }
-            const cityListHTML = document.getElementById('selectCity');
-            html = '';
-            if (window.location.pathname.substr(-10) === 'index.html') html = 'Wszystkie';
-            for (let i = 0; i < cityArray.length; i++) {
-                html += '<option>' + cityArray[i].cityName + '</option>';
-            }
-            cityListHTML.innerHTML = html;
-
-        };
-        request.send();
-    }
-}
-
-storeUserId(1);
-
+//////////////////////////////////////////Load user profile
 function loadUserProfile() {
     let user;
     let request = new XMLHttpRequest();
@@ -126,7 +102,6 @@ function loadUserProfile() {
             user = JSON.parse(this.response);
             if (request.status >= 200 && request.status < 400) {
                 user = new User(user.name, user.surname, user.avatar, user.phone, user.email, user.cityByCityIdCity.name, user.about, user.birthDate);
-                console.log(user);
             } else {
                 console.log('error');
             }
@@ -137,16 +112,15 @@ function loadUserProfile() {
             html += '<img class="avatar" src="img/avatars/default.PNG" alt="Card image">';
             html += '<div class="card-body">';
             html += '<h5 class="card-title">O mnie:</h5>'
-            // html += '<p class="card-text">' + user.about + '</p>';
-            html += '<p class="card-text">Pasjonat matematyki, od dziecka startowałem w olimpiadach. Nie ma dla mnie rzeczy niemożliwych.</p>';
-            html += '<span class="badge badge-info opinionsBtn">Opinie: 1</span>';
-            html += '<span class="badge badge-warning opinionsBtn">Ocena: 5/5</span>';
+            html += '<p class="card-text">' + user.about + '</p>';
+            html += '<span class="badge badge-info opinionsBtn" id="opinionAmount" onclick="scrollDown()"></span>';
+            html += '<span class="badge badge-warning opinionsBtn" id="ratingAvg"></span>';
             if (window.location.pathname.substr(-12) === 'profile.html') {
                 html += '<ul class="list-group list-group-flush" style="font-size: 20px;">';
-                html += '<li class="list-group-item"><i class="material-icons">phone</i>' + user.phone + '</li>';
-                html += '<li class="list-group-item"><i class="material-icons">email</i>' + user.email + '</li>';
-                html += '<li class="list-group-item"><i class="material-icons">location_city</i>' + user.cityName + '</li>';
-                html += '<li class="list-group-item"><i class="material-icons">account_box</i>' + getAgeFromBirthDate(user.birthDate) + ' lat(a)</li>';
+                html += '<li class="list-group-item"><i class="material-icons">phone</i> ' + user.phone + '</li>';
+                html += '<li class="list-group-item"><i class="material-icons">email</i> ' + user.email + '</li>';
+                html += '<li class="list-group-item"><i class="material-icons">location_city</i> ' + user.cityName + '</li>';
+                html += '<li class="list-group-item"><i class="material-icons">account_box</i> ' + getAgeFromBirthDate(user.birthDate) + ' lat(a)</li>';
                 html += '</ul>';
                 html += '</div>';
                 html += '<a href="noticesuser.html"><button type="button" class="btn btn-success show-ann" style="margin-bottom:5px">Zobacz ogłoszenia</button></a>';
@@ -162,72 +136,50 @@ function loadUserProfile() {
     }
 }
 
-function loadUserOpinions(idUser) {
+/////////////////////////////////// Load user opinions
+function loadUserOpinions() {
     let opinionArray = new Array();
     let opinionList;
     let request = new XMLHttpRequest();
-    idUser = 1;
+    var idUser = localStorage.getItem("userID");
     if (idUser != 0 && idUser != "undefined") {
         request.open('GET', opinionsUrl, true);
         request.onload = function () {
-            // Begin accessing JSON data here
             opinionList = JSON.parse(this.response);
             if (request.status >= 200 && request.status < 400) {
                 opinionList.forEach(opinion => {
-                    // console.log(opinion);
-                    let newOpinion = new Opinion(opinion.idOpinion, opinion.rating, opinion.comment, opinion.userTo, opinion.userByUserFrom.name);
+                    let newOpinion = new Opinion(opinion.idOpinion, opinion.rating, opinion.comment, opinion.userTo, opinion.userrByUserFrom.name);
                     opinionArray.push(newOpinion);
                 });
             } else {
                 console.log('error');
             }
+            let ratesSum = 0;
+            let ratesAmount = 0;
             const opinionListHTML = document.getElementById('showOpinions');
             html = '';
             for (let i = 0; i < opinionArray.length; i++) {
-                if (opinionArray[i].userTo === idUser) {
+                if (opinionArray[i].userTo === Number(idUser)) {
                     html += '<div class="card border-success mb-3 opinionCard" style="max-width: 20rem;">';
                     html += '<div class="card-body">';
-                    html += '<em style="font-size: 17px;">Bardzo dobry korepetytor, świetnie tłumaczy. Matematyka staje się prosta :)</em>'
-                    // html += '<em style="font-size: 17px;">' + opinionArray[i].comment + '</em>'
-                    html += '<h6 class="text-muted">Marek</h6></div>';
-                    // html += '<h6 class="text-muted">' + opinionArray[i].userFromName + '</h6></div>';
-                    html += '<div class="card-header opinionHeader">Ocena:';
-                    // html += '<span class="badge badge-warning note">' + opinionArray[i].rating + '</span>';
-                    html += '<span class="badge badge-warning note"> 5 </span>';
+                    html += '<em style="font-size: 17px;">' + opinionArray[i].comment + '</em>'
+                    html += '<h6 class="text-muted">' + opinionArray[i].userFromName + '</h6></div>';
+                    html += '<div class="card-header opinionHeader">Ocena: ';
+                    html += '<span class="badge badge-warning note">' + opinionArray[i].rating + '</span>';
                     html += '</div></div>';
+                    ratesAmount++;
+                    ratesSum += opinionArray[i].rating;
                 }
             }
+            document.getElementById("opinionAmount").innerText = 'Opinie: ' + ratesAmount;
+            if(ratesAmount > 0){
+                document.getElementById("ratingAvg").innerText = 'Ocena: ' + ratesSum/ratesAmount + '/5';
+                html = '<h4 class="card-title" style="margin-bottom: 5px; margin-left: 5vw">Opinie:</h4>' + html;
+            }
             opinionListHTML.innerHTML = html;
-
         };
         request.send();
     }
-}
-
-function loadVoivodeships() {
-    let voivodeshipArray = new Array();
-    let voivodeshipList;
-    let request = new XMLHttpRequest();
-    request.open('GET', voivodeshipsUrl, true);
-    request.onload = function () {
-        // Begin accessing JSON data here
-        voivodeshipList = JSON.parse(this.response);
-        if (request.status >= 200 && request.status < 400) {
-            voivodeshipList.forEach(voivodeship => {
-                let newVoivodeship = new Voivodeship(voivodeship.idVoivodeship, voivodeship.nameVoivodeship);
-                voivodeshipArray.push(newVoivodeship);
-            });
-        } else {
-            console.log('error');
-        }
-        const voivodeshipListHTML = document.getElementById('selectVoivodeship');
-        html = '<option>Wszystkie</option>';
-        for (let i = 0; i < voivodeshipArray.length; i++) {
-            html += '<option>' + voivodeshipArray[i].nameVoivodeship + '</option>';
-        }
-        voivodeshipListHTML.innerHTML = html;
-    };
-    request.send();
 }
 
 function loadSubjects() {
@@ -249,12 +201,71 @@ function loadSubjects() {
         }
         const subjectListHTML = document.getElementById('selectSubject');
         html = '<option>Wszystkie</option>';
+        if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
         for (let i = 0; i < subjectArray.length; i++) {
             html += '<option>' + subjectArray[i].name + '</option>';
         }
         subjectListHTML.innerHTML = html;
     };
     request.send();
+}
+
+function loadVoivodeships() {
+    let voivodeshipArray = new Array();
+    let voivodeshipList;
+    let request = new XMLHttpRequest();
+    request.open('GET', voivodeshipsUrl, true);
+    request.onload = function () {
+        // Begin accessing JSON data here
+        voivodeshipList = JSON.parse(this.response);
+        if (request.status >= 200 && request.status < 400) {
+            voivodeshipList.forEach(voivodeship => {
+                let newVoivodeship = new Voivodeship(voivodeship.idVoivodeship, voivodeship.nameVoivodeship);
+                voivodeshipArray.push(newVoivodeship);
+            });
+        } else {
+            console.log('error');
+        }
+        const voivodeshipListHTML = document.getElementById('selectVoivodeship');
+        html = '<option>Wszystkie</option>';
+        if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
+        for (let i = 0; i < voivodeshipArray.length; i++) {
+            html += '<option>' + voivodeshipArray[i].nameVoivodeship + '</option>';
+        }
+        voivodeshipListHTML.innerHTML = html;
+    };
+    request.send();
+}
+
+function loadCities(id) {
+    let cityArray = new Array();
+    let cityList;
+    let request = new XMLHttpRequest();
+    if (id != 0 && id != "undefined") {
+        request.open('GET', voivodeshipsUrl + '/' + id, true);
+        request.onload = function () {
+            // Begin accessing JSON data here
+            cityList = JSON.parse(this.response);
+            cityList = cityList.citiesByIdVoivodeship;
+            if (request.status >= 200 && request.status < 400) {
+                cityList.forEach(city => {
+                    let newCity = new City(city.idCity, city.name);
+                    cityArray.push(newCity);
+                });
+            } else {
+                console.log('error');
+            }
+            const cityListHTML = document.getElementById('selectCity');
+            html = '<option>Wszystkie</option>';
+            if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
+            for (let i = 0; i < cityArray.length; i++) {
+                html += '<option>' + cityArray[i].cityName + '</option>';
+            }
+            cityListHTML.innerHTML = html;
+
+        };
+        request.send();
+    }
 }
 
 //Get notices list from server
@@ -344,9 +355,13 @@ function storeUserId(userID) {
     localStorage.setItem('userID', userID);
 }
 
+function storeUserEmail(userEmail) {
+    localStorage.setItem('userEmail', userEmail);
+}
+
 function getViovideshipIndex() {
     let ele = document.getElementById("selectVoivodeship");
-    for (var i = 0; i < ele.length; i++) {
+    for (var i = 1; i < ele.length; i++) {
         if (ele[i].childNodes[0].nodeValue === ele.value) {
             loadCities(i);
         }
@@ -355,7 +370,7 @@ function getViovideshipIndex() {
 
 function getListIndex(idHTML) {
     let ele = document.getElementById(idHTML);
-    for (var i = 0; i < ele.length; i++) {
+    for (var i = 1; i < ele.length; i++) {
         if (ele[i].childNodes[0].nodeValue === ele.value) {
             return i;
         }
@@ -401,23 +416,27 @@ function postNotice() {
     var dataIdUser = {};
     var dataIdSubject = {};
 
+    data.idNotice="";
     if (document.getElementById('offer').classList.contains('active')) {
         data.lookOrOffer = 0;
     } else {
         data.lookOrOffer = 1;
     }
-
-    dataIdSubject.idSubject = getListIndex('selectSubject');
-    data.subjectBySubjectIdSubject = dataIdSubject;
-    data.level = getListIndex('selectLevel');
+    data.note = document.getElementById("noticeDescription").value;
     data.meetingPlace = document.getElementById("selectCity").value;
+    data.meetingDate = document.getElementById("date").value;
+    
     data.price = document.getElementById("price").value;
-    data.date = document.getElementById("date").value;
+    dataIdSubject.idSubject = getListIndex('selectSubject');
+    
+    data.active = 1;
+    data.level = getListIndex('selectLevel');
     data.timeFrom = timeToTimestamp(data.date, document.getElementById('timeFrom').value);
     data.timeTo = timeToTimestamp(data.date, document.getElementById('timeTo').value);
-    data.note = document.getElementById("noticeDescription").value;
-    dataIdUser.idUser = 1;
-    data.userByUserIdUser = dataIdUser;
+    alert('Dodano pomyslnie!');
+    data.subjectBySubjectIdSubject = dataIdSubject;
+    dataIdUser.userIdUser = 1;
+    data.userByUserrIdUser = dataIdUser;
     // data.meetingByMeetingIdMeetin
     // if(data[7]==='') alert("Nie podano wartosci!");
     // else {
@@ -440,4 +459,29 @@ function postNotice() {
     // TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json).Trzeba skombinować jakieś obejście lepsze niż alert.
 
     window.location.pathname = '/index.html';
+}
+
+function lookFor(){
+    let lookForData = {};
+
+    lookForData.subjectName = getListIndex("selectSubject");
+    lookForData.level = getListIndex("selectLevel");
+    lookForData.voivodeship = getListIndex("selectVoivodeship");    
+    lookForData.city = getListIndex("selectCity");
+    lookForData.timeFrom = document.getElementById("timeFrom").value;
+    lookForData.timeTo = document.getElementById("timeTo").value;
+
+    if (document.getElementById('offer').classList.contains('active')) {
+        lookForData.offerOrLookFor = 0;
+    } else {
+        lookForData.offerOrLookFor = 1;
+    }
+    if (document.getElementById('asc').classList.contains('active')) {
+        lookForData.ascOrDesc = 0;
+    } else {
+        lookForData.ascOrDesc = 1;
+    }
+    
+    var data = JSON.stringify(lookForData);
+    console.log(data);
 }
