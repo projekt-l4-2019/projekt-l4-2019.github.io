@@ -8,25 +8,7 @@ const usersUrl = "https://rhubarb-cobbler-84890.herokuapp.com/users";
 
 
 ///TEMP SETTINGS:
-storeUserId(2);
-
-
-
-if (window.location.pathname.substr(-10) === 'index.html') {
-    loadNotices();
-    loadVoivodeships();
-    loadSubjects();
-} else if (window.location.pathname.substr(-14) === 'noticeadd.html') {
-    loadVoivodeships();
-    loadSubjects();
-} else if (window.location.pathname.substr(-11) === 'notice.html') {
-    loadSelectedNotice();
-    loadUserProfile();
-    loadUserOpinions();
-} else if (window.location.pathname.substr(-12) === 'profile.html') {
-    loadUserProfile();
-    loadUserOpinions();
-}
+storeUserId(1);
 
 
 class City {
@@ -91,12 +73,30 @@ class User {
     }
 }
 
+
+
+if (window.location.pathname.substr(-10) === 'index.html') {
+    loadNotices();
+    loadVoivodeships();
+    loadSubjects();
+} else if (window.location.pathname.substr(-14) === 'noticeadd.html') {
+    loadVoivodeships();
+    loadSubjects();
+} else if (window.location.pathname.substr(-11) === 'notice.html') {
+    loadSelectedNotice();
+    loadUserProfile();
+    loadUserOpinions();
+} else if (window.location.pathname.substr(-12) === 'profile.html') {
+    loadUserProfile();
+    loadUserOpinions();
+}
+
 //////////////////////////////////////////Load user profile
 function loadUserProfile() {
     let user;
     let request = new XMLHttpRequest();
     if (localStorage.getItem("userID") != 0 && localStorage.getItem("userID") != "undefined") {
-        request.open('GET', usersUrl + '/' + localStorage.getItem("userID"), true);
+        request.open('GET', usersUrl + '/' + localStorage.getItem("userID"), false);
         request.onload = function () {
             // Begin accessing JSON data here
             user = JSON.parse(this.response);
@@ -143,7 +143,7 @@ function loadUserOpinions() {
     let request = new XMLHttpRequest();
     var idUser = localStorage.getItem("userID");
     if (idUser != 0 && idUser != "undefined") {
-        request.open('GET', opinionsUrl, true);
+        request.open('GET', opinionsUrl, false);
         request.onload = function () {
             opinionList = JSON.parse(this.response);
             if (request.status >= 200 && request.status < 400) {
@@ -158,22 +158,24 @@ function loadUserOpinions() {
             let ratesAmount = 0;
             const opinionListHTML = document.getElementById('showOpinions');
             html = '';
-            for (let i = 0; i < opinionArray.length; i++) {
+            for (let i = opinionArray.length-1; i>=0; i--) {
                 if (opinionArray[i].userTo === Number(idUser)) {
+                    console.log(opinionArray[i].idOpinion);
                     html += '<div class="card border-success mb-3 opinionCard" style="max-width: 20rem;">';
                     html += '<div class="card-body">';
                     html += '<em style="font-size: 17px;">' + opinionArray[i].comment + '</em>'
                     html += '<h6 class="text-muted">' + opinionArray[i].userFromName + '</h6></div>';
                     html += '<div class="card-header opinionHeader">Ocena: ';
                     html += '<span class="badge badge-warning note">' + opinionArray[i].rating + '</span>';
-                    html += '</div></div>';
+                    html += '</div>';
+                    html += '<button type="button" class="btn btn-danger" onclick="deleteOpinion(' + opinionArray[i].idOpinion + ')">Usuń</button></div>';
                     ratesAmount++;
                     ratesSum += opinionArray[i].rating;
                 }
             }
             document.getElementById("opinionAmount").innerText = 'Opinie: ' + ratesAmount;
-            if(ratesAmount > 0){
-                document.getElementById("ratingAvg").innerText = 'Ocena: ' + ratesSum/ratesAmount + '/5';
+            if (ratesAmount > 0) {
+                document.getElementById("ratingAvg").innerText = 'Ocena: ' + (ratesSum / ratesAmount).toFixed(1) + '/5';
                 html = '<h4 class="card-title" style="margin-bottom: 5px; margin-left: 5vw">Opinie:</h4>' + html;
             }
             opinionListHTML.innerHTML = html;
@@ -182,11 +184,22 @@ function loadUserOpinions() {
     }
 }
 
+function deleteOpinion(idOpinion) {
+    let json = JSON.stringify('');
+    let deleteOpinion = new XMLHttpRequest();
+    deleteOpinion.open("DELETE", opinionsUrl + '/' + idOpinion, false);
+    deleteOpinion.setRequestHeader('Content-Type', 'application/json');
+    postOpinion.onload;
+    console.log(deleteOpinion);
+    deleteOpinion.send(json);
+    deleteOpinion.onreadystatechange(window.location.reload());
+}
+
 function loadSubjects() {
     let subjectArray = new Array();
     let subjectList;
     let request = new XMLHttpRequest();
-    request.open('GET', subjectsUrl, true);
+    request.open('GET', subjectsUrl, false);
     request.onload = function () {
         // Begin accessing JSON data here
         subjectList = JSON.parse(this.response);
@@ -214,7 +227,7 @@ function loadVoivodeships() {
     let voivodeshipArray = new Array();
     let voivodeshipList;
     let request = new XMLHttpRequest();
-    request.open('GET', voivodeshipsUrl, true);
+    request.open('GET', voivodeshipsUrl, false);
     request.onload = function () {
         // Begin accessing JSON data here
         voivodeshipList = JSON.parse(this.response);
@@ -317,7 +330,7 @@ function loadSelectedNotice() {
     let noticeArray = new Array();
     let notice;
     let request = new XMLHttpRequest();
-    request.open('GET', noticesUrl + '/' + localStorage.getItem("noticeID"), true);
+    request.open('GET', noticesUrl + '/' + localStorage.getItem("noticeID"), false);
     request.onload = function () {
         // Begin accessing JSON data here
         notice = JSON.parse(this.response);
@@ -412,61 +425,50 @@ function getAgeFromBirthDate(birthDate) {
 }
 
 function postNotice() {
-    var data = {};
-    var dataIdUser = {};
-    var dataIdSubject = {};
+    let data = {};
+    let dataIdUser = {};
+    let dataIdSubject = {};
 
-    data.idNotice="";
+    data.idNotice = "";
     if (document.getElementById('offer').classList.contains('active')) {
-        data.lookOrOffer = 0;
+        data.lookOrOffer = "0";
     } else {
-        data.lookOrOffer = 1;
+        data.lookOrOffer = "1";
     }
     data.note = document.getElementById("noticeDescription").value;
     data.meetingPlace = document.getElementById("selectCity").value;
     data.meetingDate = document.getElementById("date").value;
-    
-    data.price = document.getElementById("price").value;
-    dataIdSubject.idSubject = getListIndex('selectSubject');
-    
-    data.active = 1;
-    data.level = getListIndex('selectLevel');
-    data.timeFrom = timeToTimestamp(data.date, document.getElementById('timeFrom').value);
-    data.timeTo = timeToTimestamp(data.date, document.getElementById('timeTo').value);
-    alert('Dodano pomyslnie!');
-    data.subjectBySubjectIdSubject = dataIdSubject;
-    dataIdUser.userIdUser = 1;
-    data.userByUserrIdUser = dataIdUser;
-    // data.meetingByMeetingIdMeetin
-    // if(data[7]==='') alert("Nie podano wartosci!");
-    // else {
-    let json = JSON.stringify(data);
-    console.log(json);
 
-    // let xhr = new XMLHttpRequest();
-    // xhr.open("POST", noticesUrl, true);
-    // xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-    // xhr.onload = function () {
-    //     let users = JSON.parse(xhr.responseText);
-    //     if (xhr.readyState === 4 && xhr.status === 201) {
-    //         console.table(users);
-    //     } else {
-    //         console.error(users);
-    //     }
-    // };
-    // xhr.send(json);
+    data.price = Number(document.getElementById("price").value);
+    dataIdSubject.idSubject = getListIndex('selectSubject');
+
+    data.active = "1";
+    data.level = getListIndex('selectLevel');
+    data.timestamp = "";
+    data.timeFrom = timeToTimestamp(data.meetingDate, document.getElementById('timeFrom').value);
+    data.timeTo = timeToTimestamp(data.meetingDate, document.getElementById('timeTo').value);
+    data.subjectBySubjectIdSubject = dataIdSubject;
+    dataIdUser.idUser = 1;
+    data.userrByUserrIdUser = dataIdUser;
+
+    let json = JSON.stringify(data);
+    let postNotice = new XMLHttpRequest();
+    postNotice.open("POST", noticesUrl, true);
+    postNotice.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    postNotice.onload;
+    postNotice.send(json);
     alert('Dodano pomyslnie!');
     // TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json).Trzeba skombinować jakieś obejście lepsze niż alert.
 
-    window.location.pathname = '/index.html';
+    // window.location.pathname = '/index.html';
 }
 
-function lookFor(){
+function lookFor() {
     let lookForData = {};
 
     lookForData.subjectName = getListIndex("selectSubject");
     lookForData.level = getListIndex("selectLevel");
-    lookForData.voivodeship = getListIndex("selectVoivodeship");    
+    lookForData.voivodeship = getListIndex("selectVoivodeship");
     lookForData.city = getListIndex("selectCity");
     lookForData.timeFrom = document.getElementById("timeFrom").value;
     lookForData.timeTo = document.getElementById("timeTo").value;
@@ -481,7 +483,30 @@ function lookFor(){
     } else {
         lookForData.ascOrDesc = 1;
     }
-    
+
     var data = JSON.stringify(lookForData);
     console.log(data);
+}
+
+function postOpinion() {
+    var opinion = {};
+    var opinion2 = {};
+    var opinion3 = {};
+    opinion.idOpinion = "";
+    opinion.rating = document.getElementById("userAddOpinion").value;
+    opinion.comment = document.getElementById("userAddOpinionDescription").value;
+    opinion.userTo = 1;
+    opinion.userFrom = 2;
+    opinion2.idUser = 1;
+    opinion3.idUser = 2;
+    opinion.userrByUserTo = opinion2;
+    opinion.userrByUserFrom = opinion3;
+
+    let postOpinion = new XMLHttpRequest();
+    let json = JSON.stringify(opinion);
+    postOpinion.open("POST", opinionsUrl, false);
+    postOpinion.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    postOpinion.onload;
+    postOpinion.send(json);
+    postOpinion.onreadystatechange(window.history.back());
 }
