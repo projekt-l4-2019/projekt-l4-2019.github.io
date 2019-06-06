@@ -8,14 +8,16 @@
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport"
         content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <meta charset="utf-8">
+    <meta name="description" content="TeachMe">
+    <meta name="author" content="Polska Grupa Programistyczna L4 2019">
+
+    <title>TeachMe</title>
 
     <link rel="stylesheet" type="text/css" href="css/iconfont/material-icons.css">
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="css/index.css">
     <link rel="stylesheet" type="text/css" href="css/jquery.mCustomScrollbar.min.css">
-
-
-    <title>TeachMe</title>
 </head>
 
 <body>
@@ -35,7 +37,7 @@
 
             <ul class="list-unstyled CTAs">
                 <li>
-                    <a href="login.html" class="download">Logowanie</a>
+                    <a href="https://rhubarb-cobbler-84890.herokuapp.com/login" class="download">Logowanie</a>
                 </li>
             </ul>
         </nav>
@@ -64,11 +66,11 @@
                             <div class="form-group">
                                 <label for="selectLevel">Wybierz poziom:</label>
                                 <select class="form-control" id="selectLevel">
-                                    <option>Wszystkie</option>
-                                    <option>Szkoła podstawowa</option>
-                                    <option>Gimnazjum</option>s
-                                    <option>Szkoła średnia</option>
-                                    <option>Szkoła wyższa</option>
+                                    <option disabled="disabled" selected="selected" value="0"></option>
+                                    <option value='1'>Szkoła podstawowa</option>
+                                    <option value='2'>Gimnazjum</option>
+                                    <option value='3'>Szkoła średnia</option>
+                                    <option value='4'>Szkoła wyższa</option>
                                 </select>
                             </div>
                         </li>
@@ -76,35 +78,36 @@
                             <div class="form-group">
                                 <label class="col-form-label" for="selectVoivodeship">Województwo:</label>
                                 <select class="form-control" id="selectVoivodeship"
-                                    onclick="getViovideshipIndex()"></select>
+                                    onclick="loadCities(document.getElementById('selectVoivodeship').value)"></select>
                             </div>
                         </li>
                         <li class="nav-item">
                             <div class="form-group">
                                 <label class="col-form-label" for="selectCity">Miejscowość:</label>
-                                <select class="form-control" id="selectCity">
-                                    <option>Wszystkie</option>
+                                <select class="form-control" id="selectCity"
+                                    onclick="(cordova.platformId==='android') ? loadCities(document.getElementById('selectVoivodeship').value) : 0">
+                                    <option disabled="disabled" selected="selected" value="0"></option>
                                 </select>
                             </div>
                         </li>
                         <li>
                             <div class="form-inline">
                                 <label class="col-form-label" for="timeFrom">Cena (pomiędzy):<br></label>
-                                <input type="number" class="form-control" id="timeFrom">
-                                <input type="number" class="form-control" id="timeTo">
+                                <input type="number" class="form-control" id="priceMin">
+                                <input type="number" class="form-control" id="priceMax">
                             </div>
                         </li>
                         <li class="nav-item">
                             <div class="form-group">
                                 <label for="selectSubject">Kogo szukasz?:</label><br>
                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                    <label class="btn btn-secondary active searchMenu">
-                                        <input type="radio" name="options" id="offer" autocomplete="off" checked="">
-                                            Korepetytora
+                                    <label class="btn btn-secondary active searchMenu" id="offer">
+                                        <input type="radio" name="options" autocomplete="off" checked="">
+                                        Korepetytora
                                     </label>
-                                    <label class="btn btn-secondary searchMenu">
-                                        <input type="radio" name="options" id="lookfor" autocomplete="off">
-                                            Ucznia
+                                    <label class="btn btn-secondary searchMenu" id="lookfor">
+                                        <input type="radio" name="options" autocomplete="off">
+                                        Ucznia
                                     </label>
                                 </div>
                             </div>
@@ -113,13 +116,13 @@
                             <div class="form-group">
                                 <label for="selectSubject">Cena:</label><br>
                                 <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                    <label class="btn btn-secondary active searchMenu">
-                                        <input type="radio" name="options" id="asc" autocomplete="off" checked="">
-                                            Rosnąco
+                                    <label class="btn btn-secondary active searchMenu" id="asc">
+                                        <input type="radio" name="options" autocomplete="off" checked="">
+                                        Rosnąco
                                     </label>
-                                    <label class="btn btn-secondary searchMenu">
-                                        <input type="radio" name="options" id="desc" autocomplete="off">
-                                            Malejąco
+                                    <label class="btn btn-secondary searchMenu" id="desc">
+                                        <input type="radio" name="options" autocomplete="off">
+                                        Malejąco
                                     </label>
                                 </div>
                             </div>
@@ -136,7 +139,7 @@
     <div class="mainWindow jumbotron">
         <div class="list-group" id="notices"></div>
     </div>
-    <a href="noticeadd.html"><button class="circleButton" style="right: 5vw;"><i class="material-icons">add</i></button></a>
+    <a href="noticeadd.html"><button class="circleButton"><i class="material-icons">add</i></button></a>
 
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/popper.min.js"></script>

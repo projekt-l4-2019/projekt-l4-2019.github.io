@@ -5,11 +5,7 @@ const subjectsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/subjects";
 const apiUrl = 'https://rhubarb-cobbler-84890.herokuapp.com';
 const opinionsUrl = "https://rhubarb-cobbler-84890.herokuapp.com/opinions";
 const usersUrl = "https://rhubarb-cobbler-84890.herokuapp.com/users";
-
-
-///TEMP SETTINGS:
-storeUserId(1);
-
+const currentUrl = "https://rhubarb-cobbler-84890.herokuapp.com/current";
 
 class City {
     constructor(idCity, cityName) {
@@ -34,12 +30,13 @@ class Subject {
 }
 
 class Opinion {
-    constructor(idOpinion, rating, comment, userTo, userFromName) {
+    constructor(idOpinion, rating, comment, userTo, userFromName, userFromId) {
         this.idOpinion = idOpinion;
         this.rating = rating;
         this.comment = comment;
         this.userTo = userTo;
         this.userFromName = userFromName;
+        this.userFromId = userFromId;
     }
 }
 
@@ -61,20 +58,43 @@ class Notice {
 }
 
 class User {
-    constructor(name, surname, avatar, phone, email, cityName, about, birthDate, ) {
+    constructor(idUser, login, name, surname, birthDate, avatar, phone, email, cityName, idCity, about) {
+        this.idUser = idUser;
+        this.login = login;
         this.name = name;
         this.surname = surname;
+        this.birthDate = birthDate;
         this.avatar = avatar;
         this.phone = phone;
         this.email = email;
         this.cityName = cityName;
         this.about = about;
-        this.birthDate = birthDate;
+        this.idCity = idCity;
     }
 }
 
+///TEMP SETTINGS:
+storeLoggedUserInfo();
 
+function getNoticeId(id_notice) {
+    var noticeID = id_notice;
+    localStorage.setItem('noticeID', noticeID);
+}
 
+function storeUserId(userID) {
+    localStorage.setItem('userID', userID);
+    console.log(userID);
+}
+
+function getUserId() {
+    return localStorage.getItem("userID");
+}
+
+function getLoggedUserId() {
+    return localStorage.getItem("loggedID");
+}
+
+setProfileInfo();
 if (window.location.pathname.substr(-10) === 'index.html') {
     loadNotices();
     loadVoivodeships();
@@ -83,25 +103,34 @@ if (window.location.pathname.substr(-10) === 'index.html') {
     loadVoivodeships();
     loadSubjects();
 } else if (window.location.pathname.substr(-11) === 'notice.html') {
-    loadSelectedNotice();
-    loadUserProfile();
-    loadUserOpinions();
+    loadSelectedNotice(getUserId());
+    loadUserProfile(getUserId());
+    loadUserOpinions(getUserId());
 } else if (window.location.pathname.substr(-12) === 'profile.html') {
-    loadUserProfile();
-    loadUserOpinions();
+    loadUserProfile(getUserId());
+    loadUserOpinions(getUserId());
+} else if (window.location.pathname.substr(-14) === 'profilemy.html') {
+    loadUserProfile(getLoggedUserId());
+    loadUserOpinions(getLoggedUserId());
+} else if (window.location.pathname.substr(-16) === 'profileedit.html') {
+    loadVoivodeships();
+} else if (window.location.pathname.substr(-15) === 'addopinion.html') {
+    loadUserNameAvatar(getUserId());
 }
 
+
 //////////////////////////////////////////Load user profile
-function loadUserProfile() {
+function loadUserProfile(idUser) {
     let user;
     let request = new XMLHttpRequest();
-    if (localStorage.getItem("userID") != 0 && localStorage.getItem("userID") != "undefined") {
-        request.open('GET', usersUrl + '/' + localStorage.getItem("userID"), false);
+    if (idUser != 0 && idUser != "undefined") {
+        request.open('GET', usersUrl + '/' + idUser, false);
         request.onload = function () {
             // Begin accessing JSON data here
             user = JSON.parse(this.response);
             if (request.status >= 200 && request.status < 400) {
-                user = new User(user.name, user.surname, user.avatar, user.phone, user.email, user.cityByCityIdCity.name, user.about, user.birthDate);
+                user = new User(user.idUser, user.login, user.name, user.surname, user.birthDate, user.avatar, user.phone, user.email, user.cityByCityIdCity.name, user.cityByCityIdCity.idCity, user.about);
+
             } else {
                 console.log('error');
             }
@@ -109,26 +138,32 @@ function loadUserProfile() {
             html = '';
             html += '<div class="card-body">';
             html += '<h4 class="card-title profile-name">' + user.name + ' ' + user.surname + '</h4></div>';
-            html += '<img class="avatar" src="img/avatars/default.PNG" alt="Card image">';
+            html += '<img class="avatar" src="' + user.avatar + '" alt="Card image">';
             html += '<div class="card-body">';
             html += '<h5 class="card-title">O mnie:</h5>'
             html += '<p class="card-text">' + user.about + '</p>';
-            html += '<span class="badge badge-info opinionsBtn" id="opinionAmount" onclick="scrollDown()"></span>';
+            html += '<span class="badge badge-info opinionsBtn" id="opinionAmount" onclick="scrollDown(); storeUserId(' + user.idUser + ');"></span>';
             html += '<span class="badge badge-warning opinionsBtn" id="ratingAvg"></span>';
-            if (window.location.pathname.substr(-12) === 'profile.html') {
+            if (window.location.pathname.substr(-12) === 'profile.html' || window.location.pathname.substr(-14) === 'profilemy.html') {
                 html += '<ul class="list-group list-group-flush" style="font-size: 20px;">';
                 html += '<li class="list-group-item"><i class="material-icons">phone</i> ' + user.phone + '</li>';
                 html += '<li class="list-group-item"><i class="material-icons">email</i> ' + user.email + '</li>';
                 html += '<li class="list-group-item"><i class="material-icons">location_city</i> ' + user.cityName + '</li>';
-                html += '<li class="list-group-item"><i class="material-icons">account_box</i> ' + getAgeFromBirthDate(user.birthDate) + ' lat(a)</li>';
+                // html += '<li class="list-group-item"><i class="material-icons">account_box</i> ' + getAgeFromBirthDate(user.birthDate) + ' lat(a)</li>';
                 html += '</ul>';
                 html += '</div>';
-                html += '<a href="noticesuser.html"><button type="button" class="btn btn-success show-ann" style="margin-bottom:5px">Zobacz ogłoszenia</button></a>';
-                html += '<a href="addopinion.html"><button type="button" class="btn btn-success show-ann">Dodaj opinię</button></a>';
-                html += '<a href="profileedit.html"><button class="circleButton editButton"><i class="material-icons">edit</i></button></a>'
+                html += '<button type="button" class="btn btn-success show-ann" id="showNoticesBtn" style="margin-bottom:5px" onclick="loadUserNotices(' + user.idUser + ')">Zobacz ogłoszenia</button>';
+                html += '<button type="button" class="btn btn-success show-ann" id="showOpinionBtn" style="margin-bottom:5px" onclick="loadUserOpinions(' + user.idUser + ')">Zobacz opinie</button>';
+
+                if (Number(localStorage.getItem("loggedID")) === user.idUser) {
+                    html += '<a href="profileedit.html"><button class="circleButton editButton"><i class="material-icons">edit</i></button></a>'
+                } else {
+                    html += '<a href="addopinion.html"><button type="button" class="btn btn-success show-ann">Dodaj opinię</button></a>';
+                }
+
             } else {
                 html += '</div>';
-                html += '<a href="profile.html"><button type="button" class="btn btn-success show-ann" id="btnShowProfile">Zobacz Profil</button></a>';
+                html += '<a href="profile.html"><button type="button" class="btn btn-success show-ann" id="btnShowProfile"">Zobacz Profil</button></a>';
             }
             userHTML.innerHTML = html;
         };
@@ -137,18 +172,23 @@ function loadUserProfile() {
 }
 
 /////////////////////////////////// Load user opinions
-function loadUserOpinions() {
+function loadUserOpinions(idUser) {
     let opinionArray = new Array();
     let opinionList;
+
+    if (window.location.pathname.substr(-12) === 'profile.html' || window.location.pathname.substr(-12) === 'profilemy.html') {
+        document.getElementById("showNoticesBtn").style.setProperty("display", "block");
+        document.getElementById("showOpinionBtn").style.setProperty("display", "none");
+    }
+
     let request = new XMLHttpRequest();
-    var idUser = localStorage.getItem("userID");
     if (idUser != 0 && idUser != "undefined") {
         request.open('GET', opinionsUrl, false);
         request.onload = function () {
             opinionList = JSON.parse(this.response);
             if (request.status >= 200 && request.status < 400) {
                 opinionList.forEach(opinion => {
-                    let newOpinion = new Opinion(opinion.idOpinion, opinion.rating, opinion.comment, opinion.userTo, opinion.userrByUserFrom.name);
+                    let newOpinion = new Opinion(opinion.idOpinion, opinion.rating, opinion.comment, opinion.userTo, opinion.userrByUserFrom.name, opinion.userrByUserFrom.idUser);
                     opinionArray.push(newOpinion);
                 });
             } else {
@@ -156,19 +196,21 @@ function loadUserOpinions() {
             }
             let ratesSum = 0;
             let ratesAmount = 0;
-            const opinionListHTML = document.getElementById('showOpinions');
+            const opinionListHTML = document.getElementById('showUserOpinionsOrNotices');
             html = '';
-            for (let i = opinionArray.length-1; i>=0; i--) {
+            for (let i = opinionArray.length - 1; i >= 0; i--) {
                 if (opinionArray[i].userTo === Number(idUser)) {
-                    console.log(opinionArray[i].idOpinion);
-                    html += '<div class="card border-success mb-3 opinionCard" style="max-width: 20rem;">';
+                    html += '<div class="card border-success opinionCard mb-3">';
                     html += '<div class="card-body">';
                     html += '<em style="font-size: 17px;">' + opinionArray[i].comment + '</em>'
                     html += '<h6 class="text-muted">' + opinionArray[i].userFromName + '</h6></div>';
                     html += '<div class="card-header opinionHeader">Ocena: ';
                     html += '<span class="badge badge-warning note">' + opinionArray[i].rating + '</span>';
                     html += '</div>';
-                    html += '<button type="button" class="btn btn-danger" onclick="deleteOpinion(' + opinionArray[i].idOpinion + ')">Usuń</button></div>';
+                    if (Number(getLoggedUserId()) === opinionArray[i].userFromId) {
+                        html += '<button type="button" class="btn btn-danger" onclick="deleteOpinion(' + opinionArray[i].idOpinion + ')">Usuń</button>';
+                    }
+                    html += '</div>';
                     ratesAmount++;
                     ratesSum += opinionArray[i].rating;
                 }
@@ -176,12 +218,66 @@ function loadUserOpinions() {
             document.getElementById("opinionAmount").innerText = 'Opinie: ' + ratesAmount;
             if (ratesAmount > 0) {
                 document.getElementById("ratingAvg").innerText = 'Ocena: ' + (ratesSum / ratesAmount).toFixed(1) + '/5';
-                html = '<h4 class="card-title" style="margin-bottom: 5px; margin-left: 5vw">Opinie:</h4>' + html;
+                html = '<h5 class="card-title" style="margin-bottom: 5px; margin-left: 5vw">Opinie o użytkowniku:</h5>' + html;
             }
             opinionListHTML.innerHTML = html;
         };
         request.send();
     }
+}
+
+/////////////////////////////////// Load user notices
+function loadUserNotices(idUser) {
+    let noticeArray = new Array();
+    let noticeList;
+    document.getElementById("showNoticesBtn").style.setProperty("display", "none");
+    document.getElementById("showOpinionBtn").style.setProperty("display", "block");
+    let request = new XMLHttpRequest();
+    request.open('GET', usersUrl + '/' + idUser, true);
+    request.onload = function () {
+        // Begin accessing JSON data here
+        noticeList = JSON.parse(this.response);
+        noticeList = noticeList.noticesByIdUser;
+        console.log(noticeList);
+        if (request.status >= 200 && request.status < 400) {
+            noticeList.forEach(notice => {
+                console.log(notice);
+                let newNotice = new Notice(notice.idNotice, notice.lookOrOffer, notice.note, notice.meetingPlace, notice.meetingDate, notice.price, notice.level, notice.timestamp, notice.userIdUser, notice.timeFrom, notice.timeTo, notice.subjectBySubjectIdSubject.name);
+                noticeArray.push(newNotice);
+            });
+        } else {
+            console.log('error');
+        }
+        const noticeListHTML = document.getElementById('showUserOpinionsOrNotices');
+        html = '<h5 class="card-title" style="margin-bottom: 5px; margin-left: 5vw">Ogłoszenia użytkownika:</h5>';
+        for (let i = noticeArray.length - 1; i >= 0; i--) {
+            let notice = noticeArray[i];
+            html += '<a href="notice.html" onclick="getNoticeId(' + notice.idNotice + ')" class="list-group-item list-group-item-action flex-column align-items-start">';
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h5 class="mb-1">' + notice.subjectName + '</h5>';
+            html += '<small>dodano: ' + getDate(notice.addDate) + '</small>';
+            html += '</div>';
+
+            if (notice.note.length > 250) {
+                html += '<p class="mb-1">' + notice.note.substring(0, 250) + "..." + '</p>';
+            } else {
+                html += '<p class="mb-1">' + notice.note + '</p>';
+            }
+
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h6>Termin spotkania: ' + getDate(notice.meetingDate) + '</h6>' + '<h6>' + notice.meetingPlace + '</h6>' + '<small>' + notice.price + ' zł/h</small>';
+            html += '</div>';
+
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h6 class="mb-1">' + ((notice.lookOrOffer == 1) ? 'uczeń' : 'korepetytor') + '</h6>';
+            html += '<h6>' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</h6>';
+            html += '</div>';
+
+            html += '</a>';
+        }
+        noticeListHTML.innerHTML = html;
+    };
+    request.send();
 }
 
 function deleteOpinion(idOpinion) {
@@ -199,7 +295,7 @@ function loadSubjects() {
     let subjectArray = new Array();
     let subjectList;
     let request = new XMLHttpRequest();
-    request.open('GET', subjectsUrl, false);
+    request.open('GET', subjectsUrl, true);
     request.onload = function () {
         // Begin accessing JSON data here
         subjectList = JSON.parse(this.response);
@@ -213,10 +309,10 @@ function loadSubjects() {
             console.log('error');
         }
         const subjectListHTML = document.getElementById('selectSubject');
-        html = '<option>Wszystkie</option>';
-        if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
+        html = '<option disabled="disabled" selected="selected" value="0"></option>';
+        // if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
         for (let i = 0; i < subjectArray.length; i++) {
-            html += '<option>' + subjectArray[i].name + '</option>';
+            html += '<option value=' + subjectArray[i].idSubject + '>' + subjectArray[i].name + '</option>';
         }
         subjectListHTML.innerHTML = html;
     };
@@ -240,10 +336,10 @@ function loadVoivodeships() {
             console.log('error');
         }
         const voivodeshipListHTML = document.getElementById('selectVoivodeship');
-        html = '<option>Wszystkie</option>';
-        if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
+        html = '<option disabled="disabled" selected="selected" value="0"></option>';
+        // if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
         for (let i = 0; i < voivodeshipArray.length; i++) {
-            html += '<option>' + voivodeshipArray[i].nameVoivodeship + '</option>';
+            html += '<option value=' + voivodeshipArray[i].idVoivodeship + '>' + voivodeshipArray[i].nameVoivodeship + '</option>';
         }
         voivodeshipListHTML.innerHTML = html;
     };
@@ -269,10 +365,10 @@ function loadCities(id) {
                 console.log('error');
             }
             const cityListHTML = document.getElementById('selectCity');
-            html = '<option>Wszystkie</option>';
+            html = '<option disabled="disabled" selected="selected" value="0"></option>';
             if (window.location.pathname.substr(-14) === 'noticeadd.html') html = '<option disabled="disabled" selected="selected"></option>'
             for (let i = 0; i < cityArray.length; i++) {
-                html += '<option>' + cityArray[i].cityName + '</option>';
+                html += '<option value=' + cityArray[i].idCity + '>' + cityArray[i].cityName + '</option>';
             }
             cityListHTML.innerHTML = html;
 
@@ -289,6 +385,216 @@ function loadNotices() {
     request.open('GET', noticesUrl, true);
     request.onload = function () {
         // Begin accessing JSON data here
+        noticeList = JSON.parse(this.response);
+        if (request.status >= 200 && request.status < 400) {
+            noticeList.forEach(notice => {
+                console.log(notice);
+                let newNotice = new Notice(notice.idNotice, notice.lookOrOffer, notice.note, notice.meetingPlace, notice.meetingDate, notice.price, notice.level, notice.timestamp, notice.userrByUserrIdUser.idUser, notice.timeFrom, notice.timeTo, notice.subjectBySubjectIdSubject.name);
+                noticeArray.push(newNotice);
+            });
+
+        } else {
+            console.log('error');
+        }
+        const noticeListHTML = document.getElementById('notices');
+        html = '';
+        for (let i = noticeArray.length - 1; i >= 0; i--) {
+            let notice = noticeArray[i];
+            html += '<a href="notice.html" onclick="getNoticeId(' + notice.idNotice + '); storeUserId(' + notice.addedByUser + ');" class="list-group-item list-group-item-action flex-column align-items-start">';
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h5 class="mb-1">' + notice.subjectName + '</h5>';
+            html += '<small>dodano: ' + getDate(notice.addDate) + '</small>';
+            html += '</div>';
+            if (notice.note.length > 250) {
+                html += '<p class="mb-1">' + notice.note.substring(0, 250) + "..." + '</p>';
+            } else {
+                html += '<p class="mb-1">' + notice.note + '</p>';
+            }
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h6>Termin spotkania: ' + getDate(notice.meetingDate) + '</h6>' + '<h6>' + notice.meetingPlace + '</h6>' + '<small>' + notice.price + ' zł/h</small>';
+            html += '</div>';
+
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h6 class="mb-1">' + ((notice.lookOrOffer == 1) ? 'uczeń' : 'korepetytor') + '</h6>';
+            html += '<h6>' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</h6>';
+            html += '</div>';
+            html += '</a>';
+        }
+        noticeListHTML.innerHTML = html;
+    };
+    request.send();
+}
+
+function loadSelectedNotice() {
+    let noticeArray = new Array();
+    let notice;
+    let request = new XMLHttpRequest();
+    request.open('GET', noticesUrl + '/' + localStorage.getItem("noticeID"), false);
+    request.onload = function () {
+        // Begin accessing JSON data here
+        notice = JSON.parse(this.response);
+        if (request.status >= 200 && request.status < 400) {
+            let newNotice = new Notice(notice.idNotice, notice.lookOrOffer, notice.note, notice.meetingPlace, notice.meetingDate, notice.price, notice.level, notice.timestamp, notice.userrByUserrIdUser.idUser, notice.timeFrom, notice.timeTo, notice.subjectBySubjectIdSubject.name);
+            noticeArray.push(newNotice);
+            console.log(notice);
+
+        } else {
+            console.log('error');
+        }
+        const noticeListHTML = document.getElementById('notice_extended');
+        html = '';
+        for (let i = 0; i < noticeArray.length; i++) {
+            let notice = noticeArray[i];
+            html += '<h4 class="card-header">' + notice.subjectName + '</h4>';
+            html += '<div class="card-body"> <p class="card-text">' + notice.note + '</p></div>';
+            html += '<ul class="list-group list-group-flush">';
+            html += '<li class="list-group-item">Miejsce spotkania: ' + notice.meetingPlace + '</li>';
+            html += '<li class="list-group-item">Cena za godzinę: ' + notice.price + ' zł </li>';
+            html += '<li class="list-group-item">Godzina: ' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</li>';
+            html += '<li class="list-group-item">Termin spotkania: ' + getDate(notice.meetingDate) + '</li>';
+            console.log(notice.addedByUser);
+            if (notice.addedByUser === Number(getLoggedUserId())) {
+                html += '<button type="button" class="btn btn-danger show-ann" onclick="deleteNotice(' + notice.idNotice + ')">Usuń</button>';
+            }
+        }
+        noticeListHTML.innerHTML = html;
+    };
+    request.send();
+}
+
+function deleteNotice(idNotice) {
+    let json = JSON.stringify('');
+    let deleteNotice = new XMLHttpRequest();
+    deleteNotice.open("DELETE", noticesUrl + '/' + idNotice, false);
+    deleteNotice.setRequestHeader('Content-Type', 'application/json');
+    deleteNotice.send(json);
+    deleteNotice.onreadystatechange(window.history.back());
+}
+
+function storeLoggedUserInfo() {
+    let req = new XMLHttpRequest();
+    let user;
+    req.open('GET', currentUrl, false);
+    req.onreadystatechange = function () {
+        user = JSON.parse(this.response);
+        localStorage.setItem("loggedID", user.idUser);
+        localStorage.setItem("loggedName", user.name);
+        localStorage.setItem("loggedSurname", user.surname);
+        localStorage.setItem("loggedEmail", user.email);
+        localStorage.setItem("loggedAvatar", user.avatar);
+    }
+    req.send();
+}
+
+function setProfileInfo() {
+    const userInfo = document.getElementById('userInfo');
+    html = '<h5>' + localStorage.getItem('loggedName') + ' ' + localStorage.getItem('loggedSurname') + '</h5>';
+    html += '<h6>' + localStorage.getItem('loggedEmail') + '</h6>';
+    userInfo.innerHTML = html;
+
+    if (window.location.pathname.substr(-16) === 'profileedit.html') {
+        document.getElementById("nameSurname").innerText = localStorage.getItem('loggedName') + ' ' + localStorage.getItem('loggedSurname');
+        $("#loggedUserAvatar").attr('src', localStorage.getItem("loggedAvatar"));
+    }
+}
+
+function addZero(int) {
+    if (int < 10) {
+        int = '0' + int;
+    }
+    return int;
+}
+
+function getTime(dateJSON) {
+    let date = new Date(dateJSON);
+    let hours = addZero(date.getHours());
+    let minutes = addZero(date.getMinutes());
+    return hours + ':' + minutes;
+}
+
+function getDate(dateJSON) {
+    let date = new Date(dateJSON);
+    let year = date.getFullYear();
+    let month = addZero(date.getMonth() + 1);
+    let day = addZero(date.getDate());
+    return day + '.' + month + '.' + year;
+}
+
+function timeToTimestamp(date, time) {
+    date = date.split(':');
+    let newTime = new Date(date[1] + '/' + date[2] + '/' + date[0] + ' ' + time);
+    return newTime;
+}
+
+function getAgeFromBirthDate(birthDate) {
+    let date = new Date();
+    let bYear = new Date(birthDate);
+    return date.getFullYear() - bYear.getFullYear();
+}
+
+
+function postNotice() {
+    let data = {};
+    let dataIdUser = {};
+    let dataIdSubject = {};
+
+    data.idNotice = "";
+    if (document.getElementById('offer').classList.contains('active')) {
+        data.lookOrOffer = "0";
+    } else {
+        data.lookOrOffer = "1";
+    }
+    data.note = document.getElementById("noticeDescription").value;
+    data.meetingPlace = $("#selectCity option:selected").text();
+    data.meetingDate = document.getElementById("date").value;
+
+    data.price = Number(document.getElementById("price").value);
+    dataIdSubject.idSubject = document.getElementById('selectSubject').value;
+
+    data.active = "1";
+    data.level = document.getElementById('selectLevel').value;
+
+    data.timeFrom = timeToTimestamp(data.meetingDate, document.getElementById('timeFrom').value);
+    data.timeTo = timeToTimestamp(data.meetingDate, document.getElementById('timeTo').value);
+    data.subjectBySubjectIdSubject = dataIdSubject;
+    dataIdUser.idUser = Number(getLoggedUserId());
+    data.userrByUserrIdUser = dataIdUser;
+
+    let json = JSON.stringify(data);
+    let postNotice = new XMLHttpRequest();
+    postNotice.open("POST", noticesUrl, false);
+    postNotice.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    postNotice.send(json);
+
+    postNotice.onreadystatechange(window.history.back());
+}
+
+function lookFor() {
+    let lookForData = {};
+
+    lookForData.subjectName = document.getElementById('selectSubject').value;
+    lookForData.level = document.getElementById('selectLevel').value;
+    lookForData.voivodeship = document.getElementById('selectVoivodeship').value;
+    lookForData.city = $("#selectCity option:selected").text();
+    lookForData.priceMin = document.getElementById("priceMin").value;
+    lookForData.priceMax = document.getElementById("priceMax").value;
+
+    if (document.getElementById('offer').classList.contains('active')) {
+        lookForData.offerOrLookFor = 1;
+    } else {
+        lookForData.offerOrLookFor = 0;
+    }
+    if (document.getElementById('asc').classList.contains('active')) {
+        lookForData.ascOrDesc = 0;
+    } else {
+        lookForData.ascOrDesc = 1;
+    }
+
+    let noticeArray = new Array();
+    let noticeList;
+    let request = new XMLHttpRequest();
+    request.open('GET', noticesUrl + '/find/' + lookForData.subjectName + '/' + lookForData.level + '/' + lookForData.offerOrLookFor + '/' + lookForData.city + '/' + lookForData.priceMin + '/' + lookForData.priceMax + '/' + lookForData.ascOrDesc, true);
+    request.onload = function () {
         noticeList = JSON.parse(this.response);
         if (request.status >= 200 && request.status < 400) {
             noticeList.forEach(notice => {
@@ -319,173 +625,53 @@ function loadNotices() {
             html += '<div class="d-flex w-100 justify-content-between">';
             html += '<h6>Termin spotkania: ' + getDate(notice.meetingDate) + '</h6>' + '<h6>' + notice.meetingPlace + '</h6>' + '<small>' + notice.price + ' zł/h</small>';
             html += '</div>';
+
+            html += '<div class="d-flex w-100 justify-content-between">';
+            html += '<h6 class="mb-1">' + ((notice.lookOrOffer == 1) ? 'uczeń' : 'korepetytor') + '</h6>';
+            html += '<h6>' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</h6>';
+            html += '</div>';
             html += '</a>';
         }
         noticeListHTML.innerHTML = html;
     };
     request.send();
+
 }
 
-function loadSelectedNotice() {
-    let noticeArray = new Array();
-    let notice;
+function editProfile() {
+    let editData = {};
+    let editData2 = {};
+    let user;
     let request = new XMLHttpRequest();
-    request.open('GET', noticesUrl + '/' + localStorage.getItem("noticeID"), false);
-    request.onload = function () {
-        // Begin accessing JSON data here
-        notice = JSON.parse(this.response);
+    request.open('GET', usersUrl + '/' + getLoggedUserId(), false);
+    request.onreadystatechange = function () {
+        user = JSON.parse(this.response);
         if (request.status >= 200 && request.status < 400) {
-            let newNotice = new Notice(notice.idNotice, notice.lookOrOffer, notice.note, notice.meetingPlace, notice.meetingDate, notice.price, notice.level, notice.timestamp, notice.userIdUser, notice.timeFrom, notice.timeTo, notice.subjectBySubjectIdSubject.name);
-            noticeArray.push(newNotice);
-            console.log(notice);
-
+            user = new User(user.idUser, user.login, user.name, user.surname, user.birthDate, user.avatar, user.phone, user.email, user.cityByCityIdCity.name, user.cityByCityIdCity.idCity, user.about);
         } else {
             console.log('error');
         }
-        const noticeListHTML = document.getElementById('notice_extended');
-        html = '';
-        for (let i = 0; i < noticeArray.length; i++) {
-            let notice = noticeArray[i];
-            html += '<h4 class="card-header">' + notice.subjectName + '</h4>';
-            html += '<div class="card-body"> <p class="card-text">' + notice.note + '</p></div>';
-            html += '<ul class="list-group list-group-flush">';
-            html += '<li class="list-group-item">Miejsce spotkania: ' + notice.meetingPlace + '</li>';
-            html += '<li class="list-group-item">Cena za godzinę: ' + notice.price + ' zł </li>';
-            html += '<li class="list-group-item">Godzina: ' + getTime(notice.timeFrom) + ' - ' + getTime(notice.timeTo) + '</li>';
-            html += '<li class="list-group-item">Termin spotkania: ' + getDate(notice.meetingDate) + '</li>';
-        }
-        noticeListHTML.innerHTML = html;
-    };
+    }
     request.send();
-}
 
-function getNoticeId(id_notice) {
-    var noticeID = id_notice;
-    localStorage.setItem('noticeID', noticeID);
-}
+    editData.idUser = user.idUser;
+    editData.name = document.getElementById("userName").value;
+    editData.surname = document.getElementById("userSurname").value;
+    editData.birthDate = user.birthDate;
+    editData.avatar = user.avatar;
+    editData.phone = document.getElementById("userPhone").value;
+    editData.email = user.email;
+    editData.about = document.getElementById("userAbout").value;
+    editData2.idCity = document.getElementById('selectCity').value;
+    editData.cityByCityIdCity = editData2;
 
-function storeUserId(userID) {
-    localStorage.setItem('userID', userID);
-}
+    let data = JSON.stringify(editData);
 
-function storeUserEmail(userEmail) {
-    localStorage.setItem('userEmail', userEmail);
-}
-
-function getViovideshipIndex() {
-    let ele = document.getElementById("selectVoivodeship");
-    for (var i = 1; i < ele.length; i++) {
-        if (ele[i].childNodes[0].nodeValue === ele.value) {
-            loadCities(i);
-        }
-    }
-}
-
-function getListIndex(idHTML) {
-    let ele = document.getElementById(idHTML);
-    for (var i = 1; i < ele.length; i++) {
-        if (ele[i].childNodes[0].nodeValue === ele.value) {
-            return i;
-        }
-    }
-}
-
-function addZero(int) {
-    if (int < 10) {
-        int = '0' + int;
-    }
-    return int;
-}
-
-function getTime(dateJSON) {
-    let date = new Date(dateJSON);
-    let hours = addZero(date.getHours());
-    let minutes = addZero(date.getMinutes());
-    return hours + ':' + minutes;
-}
-
-function getDate(dateJSON) {
-    let date = new Date(dateJSON);
-    let year = date.getFullYear();
-    let month = addZero(date.getMonth());
-    let day = addZero(date.getDate());
-    return day + '.' + month + '.' + year;
-}
-
-function timeToTimestamp(date, time) {
-    date = date.split(':');
-    let newTime = new Date(date[1] + '/' + date[2] + '/' + date[0] + ' ' + time);
-    return newTime;
-}
-
-function getAgeFromBirthDate(birthDate) {
-    let date = new Date();
-    let bYear = new Date(birthDate);
-    return date.getFullYear() - bYear.getFullYear();
-}
-
-function postNotice() {
-    let data = {};
-    let dataIdUser = {};
-    let dataIdSubject = {};
-
-    data.idNotice = "";
-    if (document.getElementById('offer').classList.contains('active')) {
-        data.lookOrOffer = "0";
-    } else {
-        data.lookOrOffer = "1";
-    }
-    data.note = document.getElementById("noticeDescription").value;
-    data.meetingPlace = document.getElementById("selectCity").value;
-    data.meetingDate = document.getElementById("date").value;
-
-    data.price = Number(document.getElementById("price").value);
-    dataIdSubject.idSubject = getListIndex('selectSubject');
-
-    data.active = "1";
-    data.level = getListIndex('selectLevel');
-    data.timestamp = "";
-    data.timeFrom = timeToTimestamp(data.meetingDate, document.getElementById('timeFrom').value);
-    data.timeTo = timeToTimestamp(data.meetingDate, document.getElementById('timeTo').value);
-    data.subjectBySubjectIdSubject = dataIdSubject;
-    dataIdUser.idUser = 1;
-    data.userrByUserrIdUser = dataIdUser;
-
-    let json = JSON.stringify(data);
-    let postNotice = new XMLHttpRequest();
-    postNotice.open("POST", noticesUrl, true);
-    postNotice.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-    postNotice.onload;
-    postNotice.send(json);
-    alert('Dodano pomyslnie!');
-    // TODO: Nie nie chce sie dodać przy odświeżeniu zaraz po xhr.send(json).Trzeba skombinować jakieś obejście lepsze niż alert.
-
-    // window.location.pathname = '/index.html';
-}
-
-function lookFor() {
-    let lookForData = {};
-
-    lookForData.subjectName = getListIndex("selectSubject");
-    lookForData.level = getListIndex("selectLevel");
-    lookForData.voivodeship = getListIndex("selectVoivodeship");
-    lookForData.city = getListIndex("selectCity");
-    lookForData.timeFrom = document.getElementById("timeFrom").value;
-    lookForData.timeTo = document.getElementById("timeTo").value;
-
-    if (document.getElementById('offer').classList.contains('active')) {
-        lookForData.offerOrLookFor = 0;
-    } else {
-        lookForData.offerOrLookFor = 1;
-    }
-    if (document.getElementById('asc').classList.contains('active')) {
-        lookForData.ascOrDesc = 0;
-    } else {
-        lookForData.ascOrDesc = 1;
-    }
-
-    var data = JSON.stringify(lookForData);
-    console.log(data);
+    let editUser = new XMLHttpRequest();
+    editUser.open('PUT', usersUrl + '/' + user.idUser, false);
+    editUser.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+    editUser.send(data);
+    editUser.onreadystatechange(window.history.back());
 }
 
 function postOpinion() {
@@ -495,10 +681,10 @@ function postOpinion() {
     opinion.idOpinion = "";
     opinion.rating = document.getElementById("userAddOpinion").value;
     opinion.comment = document.getElementById("userAddOpinionDescription").value;
-    opinion.userTo = 1;
-    opinion.userFrom = 2;
-    opinion2.idUser = 1;
-    opinion3.idUser = 2;
+    opinion.userTo = getUserId();
+    opinion.userFrom = getLoggedUserId()
+    opinion2.idUser = getUserId();
+    opinion3.idUser = getLoggedUserId()
     opinion.userrByUserTo = opinion2;
     opinion.userrByUserFrom = opinion3;
 
@@ -509,4 +695,21 @@ function postOpinion() {
     postOpinion.onload;
     postOpinion.send(json);
     postOpinion.onreadystatechange(window.history.back());
+}
+
+function loadUserNameAvatar(idUser) {
+    let request = new XMLHttpRequest();
+    request.open('GET', usersUrl + '/' + idUser, false);
+    request.onreadystatechange = function () {
+        user = JSON.parse(this.response);
+        if (request.status >= 200 && request.status < 400) {
+            user = new User(user.idUser, user.login, user.name, user.surname, user.birthDate, user.avatar, user.phone, user.email, user.cityByCityIdCity.name, user.cityByCityIdCity.idCity, user.about);
+        } else {
+            console.log('error');
+        }
+        document.getElementById("nameSurname").innerText = user.name + ' ' + user.surname;
+        $("#loggedUserAvatar").attr('src', user.avatar);
+        console.log(user.avatar);
+    }
+    request.send();
 }
